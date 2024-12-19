@@ -1,0 +1,148 @@
+<!-- templates/fund.html -->
+{% extends "layout.html" %}
+
+{% block title %}{{ fund.name }} 详情{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h1 class="mb-4">{{ fund.name }} 详情</h1>
+        <table class="table table-bordered">
+            <tr>
+                <th>代码</th>
+                <td>{{ fund.code }}</td>
+            </tr>
+            <tr>
+                <th>名称</th>
+                <td>{{ fund.short_name or fund.full_name }}</td>
+            </tr>
+            <tr>
+                <th>类型</th>
+                <td>{{ fund.type }}</td>
+            </tr>
+            <!-- 添加其他必要的字段 -->
+        </table>
+
+        <h2 class="mt-5">基准表现（过去 1 年）</h2>
+        <canvas id="benchmarkChart" width="800" height="400"></canvas>
+
+        <a href="/indexes" class="btn btn-primary mt-3">返回指数列表</a>
+        <a href="/" class="btn btn-secondary mt-3">返回首页</a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fundId = {{ fund.id }};
+            const startDate = new Date();
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            const endDate = new Date();
+
+            // 格式化日期为 YYYY-MM-DD
+            const formatDate = (date) => {
+                let month = '' + (date.getMonth() + 1);
+                let day = '' + date.getDate();
+                const year = date.getFullYear();
+
+                if (month.length < 2) month = '0' + month;
+                if (day.length < 2) day = '0' + day;
+
+                return [year, month, day].join('-');
+            };
+
+            const formattedStartDate = formatDate(startDate);
+            const formattedEndDate = formatDate(endDate);
+
+            // 构建 API URL
+            const apiUrl = `/api/benchmarkData?fund_id=${fundId}&start_date=${formattedStartDate}&end_date=${formattedEndDate}`;
+
+            // 获取基准数据
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.length === 0) {
+                        document.getElementById('benchmarkChart').remove();
+                        const container = document.querySelector('.container');
+                        const noDataMsg = document.createElement('p');
+                        noDataMsg.textContent = '暂无基准数据。';
+                        container.appendChild(noDataMsg);
+                        return;
+                    }
+
+                    const dates = data.map(item => item.datetime);
+                    const adjClose = data.map(item => item.AdjClose);
+
+                    const ctx = document.getElementById('benchmarkChart').getContext('2d');
+                    const benchmarkChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: '{{ fund.name }} 基准收盘价',
+                                data: adjClose,
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderWidth: 1,
+                                pointRadius: 0,  // 去除数据点
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: '日期'
+                                    },
+                                    ticks: {
+                                        maxTicksLimit: 10,
+                                        autoSkip: true,
+                                        maxRotation: 0,
+                                        minRotation: 0
+                                    }
+                                },
+                                y: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: '收盘价（元）'
+                                    },
+                                    beginAtZero: false
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching benchmark data:', error);
+                    const container = document.querySelector('.container');
+                    const errorMsg = document.createElement('p');
+                    errorMsg.textContent = '无法获取基准数据。';
+                    container.appendChild(errorMsg);
+                });
+        });
+    </script>
+{% endblock %}

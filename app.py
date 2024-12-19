@@ -2,9 +2,10 @@ from flask import Flask, jsonify, request, render_template
 from flask.json.provider import DefaultJSONProvider
 from datetime import date, datetime
 from config import Config
-from models import db, EnhancedIndexFund, IndexFund, Security, TargetDateFund
+from models import db, EnhancedIndexFund, Fund, IndexFund, Security, TargetDateFund
 from data_module.data_api import DataManager
 import pandas as pd
+from myutils.bench_util import get_benchmark_data as u_get_benchmark_data
 
 class UpdatedJSONProvider(DefaultJSONProvider):
     def default(self, o):
@@ -73,6 +74,13 @@ def create_app():
         funds = EnhancedIndexFund.query.all()
         return render_template('enhanced_index_funds.html', funds=funds)
 
+    @app.route("/Funds/<code>")
+    def fund(code):
+        fund = Fund.query.filter(Fund.code == code).first()
+        if fund is None:
+            return "No such fund found", 404
+        return render_template("fund.html", fund=fund)
+
     @app.route("/api/targetDateFunds", methods=["GET"])
     def get_target_date_funds():
         target_date_funds = TargetDateFund.query.all()
@@ -138,6 +146,30 @@ def create_app():
                 for fund in enhanced_index_funds
             ]
         )
+
+    @app.route("/api/benchmark", methods=["GET"])
+    def get_benchmark():
+        benchmark = Security.query.filter(Security.type.like("TI%")).all()
+        return jsonify(
+            [
+                {
+                    "id": index.id,
+                    "code": index.code,
+                    "name": index.name,
+                    "type": index.type
+                }
+                for index in benchmark
+            ]
+        )
+
+    @app.route("/api/benchmarkData", methods=["GET"])
+    def get_benchmark_data():
+        fund_id = request.args.get("fund_id")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+
+        benchmark_data = u_get_benchmark_data(fund_id, start_date, end_date)
+        return jsonify(benchmark_data)
 
     return app
 
