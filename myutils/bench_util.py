@@ -7,7 +7,7 @@ import xarray as xr
 from data_module.contracts import Security
 from data_module.data_api import DataManager
 
-from models import views as v
+from app.models import views as v
 
 @dataclass
 class BenchmarkCon:
