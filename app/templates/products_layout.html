@@ -1,0 +1,41 @@
+{% extends "sidebar_layout.html" %}
+{% import "macros/sidebar_macros.html" as sidebar_macros %}
+
+{% block sidebar_content %}
+  <!-- 一级导航：可投产品 -->
+  {{ sidebar_macros.render_sidebar('可投产品分类', [
+    {'name': '银行理财', 'endpoint': 'main.products_bank'},
+    {'name': '储蓄存款', 'endpoint': 'main.products_deposits'},
+    {'name': '商业养老保险', 'endpoint': 'main.products_insurance'},
+    {'name': '公募基金', 'endpoint': 'main.products_funds'}
+  ]) }}
+
+  <hr>
+
+  <!-- 动态显示二级和三级导航 -->
+  {% if request.endpoint.startswith('main.products_bank') %}
+    {{ sidebar_macros.render_sidebar('银行理财', [
+      {'name': '产品列表', 'endpoint': 'main.products_bank_list'},
+      {'name': '相关机构', 'endpoint': 'main.products_bank_orgs'},
+      {'name': '历史数据', 'endpoint': 'main.products_bank_history'}
+    ]) }}
+  {% elif request.endpoint.startswith('main.products_deposits') %}
+    {{ sidebar_macros.render_sidebar('储蓄存款', [
+      {'name': '产品列表', 'endpoint': 'main.products_deposits_list'},
+      {'name': '定期/活期介绍', 'endpoint': 'main.products_deposits_types'},
+      {'name': '利率比较', 'endpoint': 'main.products_deposits_rates'}
+    ]) }}
+  {% elif request.endpoint.startswith('main.products_insurance') %}
+    {{ sidebar_macros.render_sidebar('商业养老保险', [
+      {'name': '产品列表', 'endpoint': 'main.products_insurance_list'},
+      {'name': '保险公司介绍', 'endpoint': 'main.products_insurance_companies'},
+      {'name': '条款解读', 'endpoint': 'main.products_insurance_terms'}
+    ]) }}
+  {% elif request.endpoint.startswith('main.products_funds') %}
+    {{ sidebar_macros.render_sidebar('公募基金', [
+      {'name': '养老FOF', 'endpoint': 'main.products_funds_fof'},
+      {'name': '指数基金', 'endpoint': 'main.products_funds_indexfunds'},
+      {'name': '增强指数基金', 'endpoint': 'main.products_funds_enhanced'}
+    ]) }}
+  {% endif %}
+{% endblock %}
