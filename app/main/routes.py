@@ -7,8 +7,8 @@ import pandas as pd
 data_manager = DataManager()
 
 @main_bp.route('/')
-def index():
-    return render_template('index.html')
+def home():
+    return render_template('home.html')
 
 @main_bp.route('/Indices')
 def indices():
@@ -16,7 +16,7 @@ def indices():
     return render_template('indices.html', indices=indices)
 
 @main_bp.route('/Indices/<code>')
-def index_detail(code):
+def index(code):
     security = Security.query.filter(Security.code == code).first()
     if security is None:
         return "No such index found", 404
@@ -36,7 +36,7 @@ def index_detail(code):
     closing_prices = [price.item() for price in index_data["Close"].values]
 
     return render_template(
-        'index_.html',
+        'index.html',
         security=security,
         dates=dates,
         closing_prices=closing_prices

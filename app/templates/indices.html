@@ -18,7 +18,7 @@
                         <tr>
                             <td>{{ index.code }}</td>
                             <td>
-                                <a href="{{ url_for('index_', code=index.code) }}">
+                                <a href="{{ url_for('main.index', code=index.code) }}">
                                     {{ index.short_name or index.full_name }}
                                 </a>
                             </td>
