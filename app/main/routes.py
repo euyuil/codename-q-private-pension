@@ -1,8 +1,8 @@
-from flask import render_template
+import pandas as pd
+from flask import abort, render_template
+from data_module.data_api import DataManager
 from app.main import main_bp
 from app.models import EnhancedIndexFund, Fund, IndexFund, Security, TargetDateFund
-from data_module.data_api import DataManager
-import pandas as pd
 
 data_manager = DataManager()
 
@@ -104,6 +104,14 @@ def products_funds_enhanced():
     funds = EnhancedIndexFund.query.all()
     return render_template("products/funds/enhanced.html", funds=funds)
 
+@main_bp.route("/products/funds/<sub_category>/fund/<fund_code>")
+def single_fund(sub_category, fund_code):
+    """单只基金页面"""
+    fund = Fund.query.filter(Fund.code == fund_code).first()
+    if not fund:
+        abort(404)
+    return render_template("products/funds/single_fund.html", sub_category=sub_category, fund=fund)
+
 @main_bp.route("/about")
 def about():
     """关于我们页面"""
@@ -140,10 +148,3 @@ def sec_index(code):
         dates=dates,
         closing_prices=closing_prices
     )
-
-@main_bp.route("/Funds/<code>")
-def fund(code):
-    fund = Fund.query.filter(Fund.code == code).first()
-    if fund is None:
-        return "No such fund found", 404
-    return render_template("fund.html", fund=fund)

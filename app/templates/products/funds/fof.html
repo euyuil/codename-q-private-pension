@@ -22,7 +22,9 @@
       {% for fund in funds %}
       <tr>
         <td>{{ fund.code }}</td>
-        <td>{{ fund.name }}</td>
+        <td>
+          <a href="{{ url_for('main.single_fund', sub_category='fof', fund_code=fund.code) }}">{{ fund.name }}</a>
+        </td>
         <td>
         {% if fund.type == 'mixed' %}
           混合型
@@ -47,7 +49,7 @@
         {% endif %}
         </td>
         <td>{{ '是' if fund.is_initiated_fund else '否' }}</td>
-        <td>{{ fund.amc_name }}</td>
+        <td>{{ fund.management_name }}</td>
       </tr>
       {% endfor %}
     </tbody>
