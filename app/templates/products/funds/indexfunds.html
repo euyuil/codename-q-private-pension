@@ -4,6 +4,16 @@
 
 {% block main_content %}
 <div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.products') }}">可投产品</a></li>
+      <li class="breadcrumb-item">公募基金</li>
+      <li class="breadcrumb-item">产品类型</li>
+      <li class="breadcrumb-item active" aria-current="page"><a href="{{ url_for('main.products_funds_indexfunds') }}">指数基金</a></li>
+    </ol>
+  </nav>
+
   <h1 class="mb-4">指数基金</h1>
   {% if funds %}
   <table class="table table-striped table-sm">

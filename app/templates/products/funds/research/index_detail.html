@@ -1,22 +1,33 @@
 {% extends "products_layout.html" %}
 
-{% block title %}{{ security.name }} 详情{% endblock %}
+{% block title %}{{ index.name }} 详情{% endblock %}
 
 {% block main_content %}
 <div class="container mt-4">
-  <h1 class="mb-4">{{ security.name }} 详情</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.products') }}">可投产品</a></li>
+      <li class="breadcrumb-item">公募基金</li>
+      <li class="breadcrumb-item">基金研究</li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.products_funds_research_indices') }}">基准指数</a></li>
+      <li class="breadcrumb-item active" aria-current="page"><a href="{{ url_for('main.products_funds_research_index_detail', index_code=index.code) }}">{{ index.name }}</a></li>
+    </ol>
+  </nav>
+
+  <h1 class="mb-4">{{ index.name }} 详情</h1>
   <table class="table table-bordered">
     <tr>
       <th>代码</th>
-      <td>{{ security.code }}</td>
+      <td>{{ index.code }}</td>
     </tr>
     <tr>
       <th>名称</th>
-      <td>{{ security.short_name or security.full_name }}</td>
+      <td>{{ index.name }}</td>
     </tr>
     <tr>
       <th>类型</th>
-      <td>{{ security.type }}</td>
+      <td>{{ index.type }}</td>
     </tr>
     <!-- 添加其他必要的字段 -->
   </table>
@@ -31,7 +42,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // 构建 API 请求的 URL
-    const apiUrl = "{{ url_for('api.api_funds_research_index_data', index_code=security.code) }}";
+    const apiUrl = "{{ url_for('api.api_funds_research_index_data', index_code=index.code) }}";
 
     fetch(apiUrl)
       .then(response => {
@@ -51,7 +62,7 @@
           data: {
             labels: data.dates,
             datasets: [{
-              label: '{{ security.name }} 收盘价',
+              label: '{{ index.name }} 收盘价',
               data: data.closing_prices,
               borderColor: 'rgba(75, 192, 192, 1)',
               backgroundColor: 'rgba(75, 192, 192, 0.2)',

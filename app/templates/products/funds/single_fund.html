@@ -2,143 +2,162 @@
 
 {% block title %}{{ fund.name }} 详情{% endblock %}
 
-{% block content %}
-    <div class="container mt-4">
-        <h1 class="mb-4">{{ fund.name }} 详情</h1>
-        <table class="table table-bordered">
-            <tr>
-                <th>代码</th>
-                <td>{{ fund.code }}</td>
-            </tr>
-            <tr>
-                <th>名称</th>
-                <td>{{ fund.short_name or fund.full_name }}</td>
-            </tr>
-            <tr>
-                <th>类型</th>
-                <td>{{ fund.type }}</td>
-            </tr>
-            <!-- 添加其他必要的字段 -->
-        </table>
+{% block main_content %}
+<div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.products') }}">可投产品</a></li>
+      <li class="breadcrumb-item">公募基金</li>
+      <li class="breadcrumb-item">产品类型</li>
+      <li class="breadcrumb-item">
+        {% if sub_category == 'fof' %}
+        <a href="{{ url_for('main.products_funds_fof') }}">养老FOF</a>
+        {% elif sub_category == 'indexfunds' %}
+        <a href="{{ url_for('main.products_funds_indexfunds') }}">指数基金</a>
+        {% elif sub_category == 'enhanced' %}
+        <a href="{{ url_for('main.products_funds_enhanced') }}">指数增强基金</a>
+        {% endif %}
+      </li>
+      <li class="breadcrumb-item active" aria-current="page"><a href="{{ url_for('main.single_fund', sub_category=sub_category, fund_code=fund.code) }}">{{ fund.name }}</a></li>
+    </ol>
+  </nav>
 
-        <h2 class="mt-5">基准表现（过去 1 年）</h2>
-        <canvas id="benchmarkChart" width="800" height="400"></canvas>
-    </div>
+  <h1 class="mb-4">{{ fund.name }} 详情</h1>
+  <table class="table table-bordered">
+    <tr>
+      <th>代码</th>
+      <td>{{ fund.code }}</td>
+    </tr>
+    <tr>
+      <th>名称</th>
+      <td>{{ fund.short_name or fund.full_name }}</td>
+    </tr>
+    <tr>
+      <th>类型</th>
+      <td>{{ fund.type }}</td>
+    </tr>
+    <!-- 添加其他必要的字段 -->
+  </table>
+
+  <h2 class="mt-5">基准表现（过去 1 年）</h2>
+  <canvas id="benchmarkChart" width="800" height="400"></canvas>
+</div>
 {% endblock %}
 
 {% block scripts %}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const fundId = {{ fund.id }};
-            const startDate = new Date();
-            startDate.setFullYear(startDate.getFullYear() - 1);
-            const endDate = new Date();
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const fundId = "{{ fund.id }}";
+    const startDate = new Date();
+    startDate.setFullYear(startDate.getFullYear() - 1);
+    const endDate = new Date();
 
-            // 格式化日期为 YYYY-MM-DD
-            const formatDate = (date) => {
-                let month = '' + (date.getMonth() + 1);
-                let day = '' + date.getDate();
-                const year = date.getFullYear();
+    // 格式化日期为 YYYY-MM-DD
+    const formatDate = (date) => {
+      let month = '' + (date.getMonth() + 1);
+      let day = '' + date.getDate();
+      const year = date.getFullYear();
 
-                if (month.length < 2) month = '0' + month;
-                if (day.length < 2) day = '0' + day;
+      if (month.length < 2) month = '0' + month;
+      if (day.length < 2) day = '0' + day;
 
-                return [year, month, day].join('-');
-            };
+      return [year, month, day].join('-');
+    };
 
-            const formattedStartDate = formatDate(startDate);
-            const formattedEndDate = formatDate(endDate);
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
 
-            // 构建 API URL
-            const apiUrl = `/api/benchmarkData?fund_id=${fundId}&start_date=${formattedStartDate}&end_date=${formattedEndDate}`;
+    // 构建 API URL
+    const apiUrl = `/api/benchmarkData?fund_id=${fundId}&start_date=${formattedStartDate}&end_date=${formattedEndDate}`;
 
-            // 获取基准数据
-            fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.length === 0) {
-                        document.getElementById('benchmarkChart').remove();
-                        const container = document.querySelector('.container');
-                        const noDataMsg = document.createElement('p');
-                        noDataMsg.textContent = '暂无基准数据。';
-                        container.appendChild(noDataMsg);
-                        return;
-                    }
+    // 获取基准数据
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.length === 0) {
+          document.getElementById('benchmarkChart').remove();
+          const container = document.querySelector('.container');
+          const noDataMsg = document.createElement('p');
+          noDataMsg.textContent = '暂无基准数据。';
+          container.appendChild(noDataMsg);
+          return;
+        }
 
-                    const dates = data.map(item => item.datetime);
-                    const adjClose = data.map(item => item.AdjClose);
+        const dates = data.map(item => item.datetime);
+        const adjClose = data.map(item => item.AdjClose);
 
-                    const ctx = document.getElementById('benchmarkChart').getContext('2d');
-                    const benchmarkChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: dates,
-                            datasets: [{
-                                label: '{{ fund.name }} 基准收盘价',
-                                data: adjClose,
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                                borderWidth: 1,
-                                pointRadius: 0,  // 去除数据点
-                                fill: true
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                x: {
-                                    display: true,
-                                    title: {
-                                        display: true,
-                                        text: '日期'
-                                    },
-                                    ticks: {
-                                        maxTicksLimit: 10,
-                                        autoSkip: true,
-                                        maxRotation: 0,
-                                        minRotation: 0
-                                    }
-                                },
-                                y: {
-                                    display: true,
-                                    title: {
-                                        display: true,
-                                        text: '收盘价（元）'
-                                    },
-                                    beginAtZero: false
-                                }
-                            },
-                            plugins: {
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                },
-                                legend: {
-                                    display: true,
-                                    position: 'top',
-                                }
-                            },
-                            interaction: {
-                                mode: 'nearest',
-                                axis: 'x',
-                                intersect: false
-                            }
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching benchmark data:', error);
-                    const container = document.querySelector('.container');
-                    const errorMsg = document.createElement('p');
-                    errorMsg.textContent = '无法获取基准数据。';
-                    container.appendChild(errorMsg);
-                });
+        const ctx = document.getElementById('benchmarkChart').getContext('2d');
+        const benchmarkChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: '{{ fund.name }} 基准收盘价',
+              data: adjClose,
+              borderColor: 'rgba(54, 162, 235, 1)',
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderWidth: 1,
+              pointRadius: 0,  // 去除数据点
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                display: true,
+                title: {
+                  display: true,
+                  text: '日期'
+                },
+                ticks: {
+                  maxTicksLimit: 10,
+                  autoSkip: true,
+                  maxRotation: 0,
+                  minRotation: 0
+                }
+              },
+              y: {
+                display: true,
+                title: {
+                  display: true,
+                  text: '收盘价（元）'
+                },
+                beginAtZero: false
+              }
+            },
+            plugins: {
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+              },
+              legend: {
+                display: true,
+                position: 'top',
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            }
+          }
         });
-    </script>
+      })
+      .catch(error => {
+        console.error('Error fetching benchmark data:', error);
+        const container = document.querySelector('.container');
+        const errorMsg = document.createElement('p');
+        errorMsg.textContent = '无法获取基准数据。';
+        container.appendChild(errorMsg);
+      });
+  });
+</script>
 {% endblock %}

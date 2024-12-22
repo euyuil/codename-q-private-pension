@@ -2,7 +2,7 @@ import pandas as pd
 from flask import jsonify, request
 from data_module.data_api import DataManager
 from app.api import api_bp
-from app.models import db, EnhancedIndexFund, Fund, IndexFund, Security, TargetDateFund
+from app.models import views, EnhancedIndexFund, IndexFund, TargetDateFund
 from myutils.bench_util import get_benchmark_data as u_get_benchmark_data
 
 data_manager = DataManager()
@@ -10,7 +10,7 @@ data_manager = DataManager()
 @api_bp.route("/funds/research/indices/<index_code>/data")
 def api_funds_research_index_data(index_code):
     """API: 获取基准指数的行情数据"""
-    security = Security.query.filter(Security.code == index_code).first()
+    security = views.Security.query.filter(views.Security.code == index_code).first()
     if security is None:
         return jsonify({"error": "No such index found"}), 404
     if not security.type.startswith("TI"):
@@ -107,7 +107,7 @@ def get_enhanced_index_funds():
 
 @api_bp.route("/benchmark", methods=["GET"])
 def get_benchmark():
-    benchmark = Security.query.filter(Security.type.like("TI%")).all()
+    benchmark = views.Security.query.filter(views.Security.type.like("TI%")).all()
     return jsonify(
         [
             {

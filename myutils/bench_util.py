@@ -2,12 +2,10 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Dict, List, Union
 
-import pandas as pd
 import xarray as xr
-from data_module.contracts import Security
 from data_module.data_api import DataManager
 
-from app.models import views as v
+from app.models import views
 
 @dataclass
 class BenchmarkCon:
@@ -21,8 +19,8 @@ class BenchmarkSegment:
     effective_end_date: date
 
 def _get_benchmark_segments(fund_id: int) -> List[BenchmarkSegment]:
-    fund_benchmarks = v.FundBenchmark.query.filter_by(fund_id=fund_id).all()
-    benchmark_dict: Dict[int, List[v.FundBenchmark]] = {}
+    fund_benchmarks = views.FundBenchmark.query.filter_by(fund_id=fund_id).all()
+    benchmark_dict: Dict[int, List[views.FundBenchmark]] = {}
     for fund_benchmark in fund_benchmarks:
         benchmark_dict.setdefault(fund_benchmark.benchmark_id, list()) \
                       .append(fund_benchmark)

@@ -4,6 +4,16 @@
 
 {% block main_content %}
 <div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.products') }}">可投产品</a></li>
+      <li class="breadcrumb-item">公募基金</li>
+      <li class="breadcrumb-item">产品类型</li>
+      <li class="breadcrumb-item active" aria-current="page"><a href="{{ url_for('main.products_funds_fof') }}">养老FOF</a></li>
+    </ol>
+  </nav>
+
   <h1 class="mb-4">养老FOF</h1>
   {% if funds %}
   <table class="table table-striped table-sm">
@@ -26,27 +36,27 @@
           <a href="{{ url_for('main.single_fund', sub_category='fof', fund_code=fund.code) }}">{{ fund.name }}</a>
         </td>
         <td>
-        {% if fund.type == 'mixed' %}
+          {% if fund.type == 'mixed' %}
           混合型
-        {% elif fund.type == 'bond' %}
+          {% elif fund.type == 'bond' %}
           债券型
-        {% else %}
+          {% else %}
           {{ fund.type }}
-        {% endif %}
+          {% endif %}
         </td>
         <td>{{ fund.target_year or '-' }}</td>
         <td>
-        {% if fund.holding_period == '1Y' %}
+          {% if fund.holding_period == '1Y' %}
           1年
-        {% elif fund.holding_period == '2Y' %}
+          {% elif fund.holding_period == '2Y' %}
           2年
-        {% elif fund.holding_period == '3Y' %}
+          {% elif fund.holding_period == '3Y' %}
           3年
-        {% elif fund.holding_period == '5Y' %}
+          {% elif fund.holding_period == '5Y' %}
           5年
-        {% else %}
+          {% else %}
           -
-        {% endif %}
+          {% endif %}
         </td>
         <td>{{ '是' if fund.is_initiated_fund else '否' }}</td>
         <td>{{ fund.management_name }}</td>
@@ -57,6 +67,5 @@
   {% else %}
   <p>暂无目标日期基金数据。</p>
   {% endif %}
-  <a href="/" class="btn btn-secondary mt-3">返回首页</a>
 </div>
 {% endblock %}

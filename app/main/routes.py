@@ -1,8 +1,7 @@
-import pandas as pd
 from flask import abort, render_template
 from data_module.data_api import DataManager
 from app.main import main_bp
-from app.models import EnhancedIndexFund, Fund, IndexFund, Security, TargetDateFund
+from app.models import views, EnhancedIndexFund, Fund, IndexFund, TargetDateFund
 
 data_manager = DataManager()
 
@@ -57,29 +56,29 @@ def single_fund(sub_category, fund_code):
 @main_bp.route("/products/funds/research/indices")
 def products_funds_research_indices():
     """基准指数页面"""
-    indices = Security.query.filter(Security.type.like("TI%")).all()
+    indices = views.Security.query.filter(views.Security.type.like("TI%")).all()
     return render_template("products/funds/research/indices.html", indices=indices)
 
 @main_bp.route("/products/funds/research/indices/<index_code>")
 def products_funds_research_index_detail(index_code):
     """基准指数详细页面"""
-    security = Security.query.filter(Security.code == index_code).first()
+    security = views.Security.query.filter(views.Security.code == index_code).first()
     if security is None:
         abort(404, description="No such index found")
     if not security.type.startswith("TI"):
         abort(400, description="This is not an index")
-    return render_template("products/funds/research/index_detail.html", security=security)
+    return render_template("products/funds/research/index_detail.html", index=security)
 
 @main_bp.route("/products/funds/research/managers")
 def products_funds_research_managers():
     """基金经理介绍页面"""
-    managers = list(get_all_research('managers'))
+    managers = []
     return render_template("products/funds/research/managers.html", managers=managers)
 
 @main_bp.route("/products/funds/research/managers/<manager_id>")
 def products_funds_research_manager_detail(manager_id):
     """基金经理详细页面"""
-    manager = get_research_data('managers', manager_id)
+    manager = get_research_data("managers", manager_id)
     if not manager:
         abort(404)
     return render_template("products/funds/research/manager_detail.html", manager=manager)
@@ -87,13 +86,13 @@ def products_funds_research_manager_detail(manager_id):
 @main_bp.route("/products/funds/research/management")
 def products_funds_research_management():
     """管理公司介绍页面"""
-    management_companies = list(get_all_research('management'))
+    management_companies = []
     return render_template("products/funds/research/management.html", management_companies=management_companies)
 
 @main_bp.route("/products/funds/research/management/<management_id>")
 def products_funds_research_management_detail(management_id):
     """管理公司详细页面"""
-    management = get_research_data('management', management_id)
+    management = get_research_data("management", management_id)
     if not management:
         abort(404)
     return render_template("products/funds/research/management_detail.html", management=management)
