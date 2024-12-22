@@ -1,7 +1,43 @@
+import pandas as pd
 from flask import jsonify, request
+from data_module.data_api import DataManager
 from app.api import api_bp
 from app.models import db, EnhancedIndexFund, Fund, IndexFund, Security, TargetDateFund
 from myutils.bench_util import get_benchmark_data as u_get_benchmark_data
+
+data_manager = DataManager()
+
+@api_bp.route("/funds/research/indices/<index_code>/data")
+def api_funds_research_index_data(index_code):
+    """API: 获取基准指数的行情数据"""
+    security = Security.query.filter(Security.code == index_code).first()
+    if security is None:
+        return jsonify({"error": "No such index found"}), 404
+    if not security.type.startswith("TI"):
+        return jsonify({"error": "This is not an index"}), 400
+    code = security.code
+
+    try:
+        index_data = data_manager.get_data(
+            start="2024-01-01",
+            end="2024-12-31",
+            frequency="1d",
+            securities=[code],
+            fields=["AdjClose"]
+        )
+    except Exception as e:
+        return jsonify({"error": "Failed to retrieve index data", "message": str(e)}), 500
+
+    if len(index_data) == 0 or "AdjClose" not in index_data.data_vars:
+        return jsonify({"error": "No data available for the given index"}), 404
+
+    dates = [date.strftime("%Y-%m-%d") for date in pd.to_datetime(index_data.datetime)]
+    closing_prices = [price.item() for price in index_data["AdjClose"].values]
+
+    return jsonify({
+        "dates": dates,
+        "closing_prices": closing_prices
+    })
 
 @api_bp.route("/targetDateFunds", methods=["GET"])
 def get_target_date_funds():

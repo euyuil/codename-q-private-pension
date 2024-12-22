@@ -65,28 +65,10 @@ def products_funds_research_index_detail(index_code):
     """基准指数详细页面"""
     security = Security.query.filter(Security.code == index_code).first()
     if security is None:
-        return "No such index found", 404
-    if security.type[:2] != "TI":
-        return "This is not an index", 400
-    code = security.code
-
-    index_data = data_manager.get_data(
-        start="2024-01-01",
-        end="2024-12-31",
-        frequency="1d",
-        securities=[code],
-        fields=["Close"]
-    )
-
-    dates = [date.strftime("%Y-%m-%d") for date in pd.to_datetime(index_data.datetime)]
-    closing_prices = [price.item() for price in index_data["Close"].values]
-
-    return render_template(
-        "products/funds/research/index_detail.html",
-        security=security,
-        dates=dates,
-        closing_prices=closing_prices
-    )
+        abort(404, description="No such index found")
+    if not security.type.startswith("TI"):
+        abort(400, description="This is not an index")
+    return render_template("products/funds/research/index_detail.html", security=security)
 
 @main_bp.route("/products/funds/research/managers")
 def products_funds_research_managers():
