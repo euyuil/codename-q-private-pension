@@ -1,13 +1,13 @@
-{% extends "layout.html" %}
+{% extends "products_layout.html" %}
 
 {% block title %}指数列表{% endblock %}
 
-{% block content %}
+{% block main_content %}
     <div class="container mt-4">
         <h1 class="mb-4">指数列表</h1>
         {% if indices %}
-            <table class="table table-striped table-bordered">
-                <thead class="table-dark">
+            <table class="table table-striped table-sm">
+                <thead>
                     <tr>
                         <th>代码</th>
                         <th>名称</th>
@@ -18,7 +18,7 @@
                         <tr>
                             <td>{{ index.code }}</td>
                             <td>
-                                <a href="{{ url_for('main.index', code=index.code) }}">
+                                <a href="{{ url_for('main.products_funds_research_index_detail', index_code=index.code) }}">
                                     {{ index.short_name or index.full_name }}
                                 </a>
                             </td>
