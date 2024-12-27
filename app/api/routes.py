@@ -1,9 +1,12 @@
+from datetime import datetime
+
 import pandas as pd
 from flask import jsonify, request
 from data_module.data_api import DataManager
 from app.api import api_bp
 from app.models import views, EnhancedIndexFund, IndexFund, TargetDateFund
 from myutils.bench_util import get_benchmark_data as u_get_benchmark_data
+from myutils import eval_util
 
 data_manager = DataManager()
 
@@ -19,8 +22,8 @@ def api_funds_research_index_data(index_code):
 
     try:
         index_data = data_manager.get_data(
-            start="2024-01-01",
-            end="2024-12-31",
+            start="1980-01-01",
+            end=datetime.now(),
             frequency="1d",
             securities=[code],
             fields=["AdjClose"]
@@ -128,3 +131,29 @@ def get_benchmark_data():
 
     benchmark_data = u_get_benchmark_data(fund_id, start_date, end_date)
     return jsonify(benchmark_data)
+
+@api_bp.route("/securities/<code>/performance", methods=["GET"])
+def get_security_performance(code):
+    security = views.Security.query.filter(views.Security.code == code).first()
+    if security is None:
+        return jsonify({"error": "No such security found"}), 404
+    if security.type not in ["TIE", "TID"]:
+        return jsonify({"error": "This is not an equity security"}), 400
+
+    try:
+        ds = data_manager.get_data(
+            start="1980-01-01",
+            end=datetime.now(),
+            frequency="1d",
+            securities=[code],
+            fields=["AdjClose"]
+        )
+    except Exception as e:
+        return jsonify({"error": "Failed to retrieve security data", "message": str(e)}), 500
+
+    if len(ds) == 0 or "AdjClose" not in ds.data_vars:
+        return jsonify({"error": "No data available for the given security"}), 404
+
+    da = ds["AdjClose"]
+    results = eval_util.get_evaluation_results(da)
+    return jsonify(results)

@@ -15,25 +15,29 @@
     </ol>
   </nav>
 
-  <h1 class="mb-4">{{ index.name }} 详情</h1>
-  <table class="table table-bordered">
-    <tr>
-      <th>代码</th>
-      <td>{{ index.code }}</td>
-    </tr>
-    <tr>
-      <th>名称</th>
-      <td>{{ index.name }}</td>
-    </tr>
-    <tr>
-      <th>类型</th>
-      <td>{{ index.type }}</td>
-    </tr>
-    <!-- 添加其他必要的字段 -->
-  </table>
+  <h1 class="mb-4">{{ index.name }} ({{ index.code }})</h1>
 
-  <h2 class="mt-5">行情数据（过去 1 年）</h2>
+  <h2 class="mt-5">历史行情</h2>
   <canvas id="indexChart" width="400" height="200"></canvas>
+
+  <h2 class="mt-5">历史表现</h2>
+  <div class="table-responsive">
+    <table class="table table-striped table-sm" id="performanceTable">
+      <thead>
+        <tr>
+          <th>期间</th>
+          <th>年化收益率</th>
+          <th>年化波动率</th>
+          <th>最大回撤</th>
+          <th>样本数</th>
+          <th>Sharpe比率</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 性能数据将通过 JavaScript 动态填充 -->
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}
 
@@ -41,13 +45,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // 构建 API 请求的 URL
-    const apiUrl = "{{ url_for('api.api_funds_research_index_data', index_code=index.code) }}";
+    const indexCode = "{{ index.code }}";
 
-    fetch(apiUrl)
+    // 构建 API 请求的 URL
+    const priceApiUrl = "{{ url_for('api.api_funds_research_index_data', index_code=index.code) }}";
+    const performanceApiUrl = `/api/securities/${indexCode}/performance`;
+
+    // 获取并绘制收盘价图表
+    fetch(priceApiUrl)
       .then(response => {
         if (!response.ok) {
-          throw new Error('Network response was not ok: ' + response.statusText);
+          throw new Error('无法获取收盘价数据: ' + response.statusText);
         }
         return response.json();
       })
@@ -115,8 +123,78 @@
         });
       })
       .catch(error => {
-        console.error('Error fetching index data:', error);
-        alert('无法获取指数数据，请稍后重试。');
+        console.error('Error fetching closing price data:', error);
+        alert('无法获取收盘价数据，请稍后重试。');
+      });
+
+    // 获取并展示性能指标
+    fetch(performanceApiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('无法获取性能数据: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        const performanceTableBody = document.querySelector('#performanceTable tbody');
+
+        periodLabelMap = {
+          '1M': '1个月',
+          '3M': '3个月',
+          '6M': '6个月',
+          '1Y': '1年',
+          '3Y': '3年',
+          '5Y': '5年',
+          '10Y': '10年',
+          'ITD': '成立至今',
+          'YTD': '年初至今',
+          'QTD': '季初至今',
+          'MTD': '月初至今'
+        };
+
+        data.forEach(item => {
+          const row = document.createElement('tr');
+
+          // 期间
+          const periodCell = document.createElement('td');
+          periodCell.textContent = periodLabelMap[item.period.label];
+          row.appendChild(periodCell);
+
+          // 年化收益率
+          const returnCell = document.createElement('td');
+          returnCell.textContent = (item.annualized_return * 100).toFixed(2) + '%';
+          row.appendChild(returnCell);
+
+          // 年化波动率
+          const volatilityCell = document.createElement('td');
+          volatilityCell.textContent = (item.annualized_volatility * 100).toFixed(2) + '%';
+          row.appendChild(volatilityCell);
+
+          // 最大回撤
+          const drawdownCell = document.createElement('td');
+          drawdownCell.textContent = (item.max_drawdown * 100).toFixed(2) + '%';
+          row.appendChild(drawdownCell);
+
+          // 观察次数
+          const observationsCell = document.createElement('td');
+          observationsCell.textContent = item.observations;
+          row.appendChild(observationsCell);
+
+          // 夏普比率
+          const sharpeCell = document.createElement('td');
+          sharpeCell.textContent = item.sharpe_ratio.toFixed(6);
+          row.appendChild(sharpeCell);
+
+          performanceTableBody.appendChild(row);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching performance data:', error);
+        alert('无法获取性能数据，请稍后重试。');
       });
   });
 </script>
