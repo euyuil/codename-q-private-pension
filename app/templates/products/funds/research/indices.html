@@ -1,6 +1,6 @@
 {% extends "products_layout.html" %}
 
-{% block title %}基准指数{% endblock %}
+{% block title %}指数{% endblock %}
 
 {% block main_content %}
 <div class="container mt-4">
@@ -14,7 +14,7 @@
     </ol>
   </nav>
 
-  <h1 class="mb-4">基准指数</h1>
+  <h1 class="mb-4">指数</h1>
   {% if indices %}
   <table class="table table-striped table-sm">
     <thead>
@@ -28,9 +28,7 @@
       <tr>
         <td>{{ index.code }}</td>
         <td>
-          <a href="{{ url_for('main.products_funds_research_index_detail', index_code=index.code) }}">
-            {{ index.short_name or index.full_name }}
-          </a>
+          <a href="{{ url_for('main.products_funds_research_index_detail', index_code=index.code) }}">{{ index.short_name or index.full_name }}</a>
         </td>
       </tr>
       {% endfor %}

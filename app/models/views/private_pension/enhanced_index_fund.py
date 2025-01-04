@@ -1,13 +1,13 @@
 """
 Model for enhanced index fund.
 """
-from .db import db
+from ...db import db
 
 class EnhancedIndexFund(db.Model):
     """
     Model for enhanced index fund.
     """
-    __tablename__ = "ppf_enhanced_index_funds"
+    __tablename__ = "v_private_pension_enhanced_index_funds"
 
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String())
@@ -17,6 +17,6 @@ class EnhancedIndexFund(db.Model):
     benchmark_index_code = db.Column(db.String())
     benchmark_index_name = db.Column(db.String())
     is_lof = db.Column(db.Boolean)
-    management_id = db.Column(db.Integer)
-    management_name = db.Column(db.String())
-    csrc_ann_date = db.Column(db.Date)
+    management_company_id = db.Column(db.Integer)
+    management_company_name = db.Column(db.String())
+    csrc_announce_date = db.Column(db.Date)

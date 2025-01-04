@@ -4,7 +4,8 @@ import pandas as pd
 from flask import jsonify, request
 from data_module.data_api import DataManager
 from app.api import api_bp
-from app.models import views, EnhancedIndexFund, IndexFund, TargetDateFund
+from app.models.views import Security
+from app.models.views.private_pension import EnhancedIndexFund, IndexFund, TargetDateFund
 from myutils.bench_util import get_benchmark_data as u_get_benchmark_data
 from myutils import eval_util
 
@@ -13,7 +14,7 @@ data_manager = DataManager()
 @api_bp.route("/funds/research/indices/<index_code>/data")
 def api_funds_research_index_data(index_code):
     """API: 获取基准指数的行情数据"""
-    security = views.Security.query.filter(views.Security.code == index_code).first()
+    security = Security.query.filter(Security.code == index_code).first()
     if security is None:
         return jsonify({"error": "No such index found"}), 404
     if not security.type.startswith("TI"):
@@ -110,7 +111,7 @@ def get_enhanced_index_funds():
 
 @api_bp.route("/benchmark", methods=["GET"])
 def get_benchmark():
-    benchmark = views.Security.query.filter(views.Security.type.like("TI%")).all()
+    benchmark = Security.query.filter(Security.type.like("TI%")).all()
     return jsonify(
         [
             {
@@ -134,7 +135,7 @@ def get_benchmark_data():
 
 @api_bp.route("/securities/<code>/performance", methods=["GET"])
 def get_security_performance(code):
-    security = views.Security.query.filter(views.Security.code == code).first()
+    security = Security.query.filter(Security.code == code).first()
     if security is None:
         return jsonify({"error": "No such security found"}), 404
     if security.type not in ["TIE", "TID"]:

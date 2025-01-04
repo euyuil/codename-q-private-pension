@@ -1,7 +1,8 @@
 from flask import abort, render_template
 from data_module.data_api import DataManager
 from app.main import main_bp
-from app.models import views, EnhancedIndexFund, Fund, IndexFund, TargetDateFund
+from app.models.views import Security
+from app.models.views.private_pension import EnhancedIndexFund, IndexFund, TargetDateFund
 
 data_manager = DataManager()
 
@@ -48,21 +49,21 @@ def single_fund(sub_category, fund_code):
     """单只基金页面"""
     if sub_category not in ["fof", "indexfunds", "enhanced"]:
         abort(404)
-    fund = Fund.query.filter(Fund.code == fund_code).first()
-    if not fund:
+    fund = Security.query.filter(Security.code == fund_code).first()
+    if not fund or fund.type[0] != "C":
         abort(404)
     return render_template("products/funds/single_fund.html", sub_category=sub_category, fund=fund)
 
 @main_bp.route("/products/funds/research/indices")
 def products_funds_research_indices():
     """基准指数页面"""
-    indices = views.Security.query.filter(views.Security.type.like("TI%")).all()
+    indices = Security.query.filter(Security.type.like("TI%")).all()
     return render_template("products/funds/research/indices.html", indices=indices)
 
 @main_bp.route("/products/funds/research/indices/<index_code>")
 def products_funds_research_index_detail(index_code):
     """基准指数详细页面"""
-    security = views.Security.query.filter(views.Security.code == index_code).first()
+    security = Security.query.filter(Security.code == index_code).first()
     if security is None:
         abort(404, description="No such index found")
     if not security.type.startswith("TI"):

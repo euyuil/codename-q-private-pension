@@ -20,7 +20,7 @@
       <nav class="nav nav-pills flex-column ms-3">
         <a class="nav-link disabled">基金研究</a>
         <nav class="nav nav-pills flex-column ms-3">
-          <a class="nav-link {% if request.endpoint.startswith('main.products_funds_research_ind') %}active{% endif %}" href="{{ url_for('main.products_funds_research_indices') }}">基准指数</a>
+          <a class="nav-link {% if request.endpoint.startswith('main.products_funds_research_ind') %}active{% endif %}" href="{{ url_for('main.products_funds_research_indices') }}">指数</a>
           <a class="nav-link {% if request.endpoint.startswith('main.products_funds_research_managers') %}active{% endif %}" href="{{ url_for('main.products_funds_research_managers') }}">基金经理</a>
           <a class="nav-link {% if request.endpoint.startswith('main.products_funds_research_management') %}active{% endif %}" href="{{ url_for('main.products_funds_research_management') }}">基金公司</a>
         </nav>
