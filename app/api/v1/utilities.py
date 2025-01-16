@@ -2,10 +2,12 @@ from dataclasses import dataclass
 from typing import Iterable, List, Tuple
 from sqlalchemy.orm import Query
 
+
 @dataclass
 class RequestAndQueryData:
     request_args: List[Tuple[str, str]]
     query: Query
+
 
 def create_request_and_query_data(
     db_model,
@@ -13,8 +15,8 @@ def create_request_and_query_data(
 ) -> RequestAndQueryData:
 
     query = db_model.query
-    query = query.limit(100000)  # Default limit to prevent large queries.
     return RequestAndQueryData(request_args=list(request_args), query=query)
+
 
 def apply_request_args_to_query_filter(
     db_model,
@@ -23,7 +25,7 @@ def apply_request_args_to_query_filter(
 
     result = RequestAndQueryData(request_args=[], query=data.query)
 
-    for key, value in data.request_args.items():
+    for key, value in data.request_args:
         key_parts = key.split(".")
 
         if len(key_parts) == 1:
@@ -46,6 +48,7 @@ def apply_request_args_to_query_filter(
 
     return result
 
+
 def apply_request_args_to_query_order_by(
     db_model,
     data: RequestAndQueryData
@@ -53,7 +56,7 @@ def apply_request_args_to_query_order_by(
 
     result = RequestAndQueryData(request_args=[], query=data.query)
 
-    for key, value in data.request_args.items():
+    for key, value in data.request_args:
         if key != ".order_by":
             result.request_args.append((key, value))
             continue
@@ -81,13 +84,14 @@ def apply_request_args_to_query_order_by(
 
     return result
 
+
 def apply_request_args_to_query_offset_limit(
     data: RequestAndQueryData
 ) -> RequestAndQueryData:
 
     result = RequestAndQueryData(request_args=[], query=data.query)
 
-    for key, value in data.request_args.items():
+    for key, value in data.request_args:
         if key == ".offset":
             result.query = result.query.offset(int(value))
         elif key == ".limit":
@@ -97,9 +101,11 @@ def apply_request_args_to_query_offset_limit(
 
     return result
 
+
 def ensure_no_request_args_left(data: RequestAndQueryData) -> None:
     if len(data.request_args) > 0:
         raise ValueError(f"Unsupported request args: {data.request_args}")
+
 
 def create_query_from_request_args(
     db_model,
