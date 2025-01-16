@@ -1,64 +1,12 @@
-from typing import List, Tuple
 from flask import jsonify, request
 from app.api.v1 import api_v1
+from app.api.v1.utilities import create_query_from_request_args
 from app.models import db
 from app.models.tables import Security
 
-COMMON_QUERY_PARAMS = ["skip", "take", "orderby"]
-
-def split_args() -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
-    common_query_args = []
-    specific_query_args = []
-    for key, value in request.args.items():
-        if key in COMMON_QUERY_PARAMS:
-            common_query_args.append((key, value))
-        else:
-            specific_query_args.append((key, value))
-    return common_query_args, specific_query_args
-
 @api_v1.route("/securities", methods=["GET"])
 def list_securities():
-    common_query_args, specific_query_args = split_args()
-    query = Security.query
-    # TODO: Prevent SQL injection.
-    for key_parts_str, value in specific_query_args:
-        key_parts = key_parts_str.split(".")
-        if len(key_parts) == 1:
-            key = key_parts[0]
-            query = query.filter(getattr(Security, key) == value)
-        elif len(key_parts) == 2:
-            key = key_parts[0]
-            operator = key_parts[1]
-            if operator == "like":
-                query = query.filter(getattr(Security, key).like(value))
-            elif operator == "startswith":
-                query = query.filter(getattr(Security, key).startswith(value))
-            else:
-                raise ValueError(f"Unsupported operator: {operator}")
-        else:
-            raise ValueError(f"Unsupported key: {key_parts_str}")
-    for key, value in common_query_args:
-        if key == "skip":
-            query = query.offset(int(value))
-        elif key == "take":
-            query = query.limit(int(value))
-        elif key == "orderby":
-            value_parts = value.split(" ")
-            if len(value_parts) == 1:
-                query = query.order_by(getattr(Security, value))
-            elif len(value_parts) == 2:
-                key = value_parts[0]
-                direction = value_parts[1]
-                if direction == "asc":
-                    query = query.order_by(getattr(Security, key).asc())
-                elif direction == "desc":
-                    query = query.order_by(getattr(Security, key).desc())
-                else:
-                    raise ValueError(f"Unsupported direction: {direction}")
-            else:
-                raise ValueError(f"Unsupported value: {value}")
-        else:
-            raise ValueError(f"Unsupported key: {key}")
+    query = create_query_from_request_args(Security, request.args.items())
     securities = query.all()
     return jsonify([
         {
