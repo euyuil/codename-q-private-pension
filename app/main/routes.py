@@ -1,8 +1,12 @@
+import pytz
+from datetime import datetime
+
 from flask import abort, render_template
 from data_module.data_api import DataManager
+
 from app.main import main_bp
 from app.models.views import Security
-from app.models.views.private_pension import EnhancedIndexFund, IndexFund, TargetDateFund
+from app.models.views.private_pension import EnhancedIndexFund, IndexFund, TargetDateFundV2
 
 data_manager = DataManager()
 
@@ -29,7 +33,12 @@ def products_funds():
 @main_bp.route("/products/funds/fof")
 def products_funds_fof():
     """养老FOF页面"""
-    funds = TargetDateFund.query.all()
+    now = datetime.now(tz=pytz.timezone("Asia/Shanghai"))
+    today = now.date()
+    funds = TargetDateFundV2.query.filter(
+        (TargetDateFundV2.effective_start_date.is_(None) | (TargetDateFundV2.effective_start_date <= today)) &
+        (TargetDateFundV2.effective_end_date.is_(None) | (TargetDateFundV2.effective_end_date >= today))
+    )
     return render_template("products/funds/fof.html", funds=funds)
 
 @main_bp.route("/products/funds/indexfunds")

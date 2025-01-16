@@ -22,6 +22,7 @@
         <th>代码</th>
         <th>名称</th>
         <th>类型</th>
+        <th>业绩基准</th>
         <th>日期</th>
         <th>持有期</th>
         <th>发起式</th>
@@ -36,14 +37,15 @@
           <a href="{{ url_for('main.single_fund', sub_category='fof', fund_code=fund.code) }}">{{ fund.name }}</a>
         </td>
         <td>
-          {% if fund.type == 'mixed' %}
+          {% if fund.fund_type == 'mixed' %}
           混合型
-          {% elif fund.type == 'bond' %}
+          {% elif fund.fund_type == 'bond' %}
           债券型
           {% else %}
-          {{ fund.type }}
+          {{ fund.fund_type }}
           {% endif %}
         </td>
+        <td>{{ fund.benchmark_name }}</td>
         <td>{{ fund.target_year or '-' }}</td>
         <td>
           {% if fund.holding_period == '1Y' %}

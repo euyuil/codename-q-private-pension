@@ -7,6 +7,7 @@ from flask import Flask
 from flask.json.provider import JSONProvider
 
 from app.api.routes import api_bp
+from app.api.v1 import api_v1
 from app.main.routes import main_bp
 from app.models import db
 from config import Config
@@ -42,5 +43,6 @@ def create_app():
     # 注册蓝图
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix="/api")  # API 路由前缀为 /api
+    app.register_blueprint(api_v1, url_prefix="/api/v1")
 
     return app
